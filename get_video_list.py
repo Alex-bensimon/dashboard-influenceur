@@ -25,6 +25,7 @@ def get_video_list(channel_id):
     #Les lives sont notés upcoming dans liveBroadcastContent (none pour les videos et les réels), à retirer de la liste par la suite (sur le json ???)
     #A voir si on veut les réels et voir comment différencier un réel d'une vidéo
 
+
     params = {
         'part': 'snippet',
         'playlistId': playlist_id,
