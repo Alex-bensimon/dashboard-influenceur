@@ -18,7 +18,7 @@ url="https://www.youtube.com/watch?v=GoAVkSDOXM0"
 video_id=get_video_id((url))
 
 def get_video_details(video_id):
-    youtube = build('youtube', 'v3', developerKey='AIzaSyAwB4RS2GZIS8MzGseHtqh8gijdto4sK2g')
+    youtube = build('youtube', 'v3', developerKey='...')
     #request = youtube.videos().list(part='snippet,statistics', id=video_id)
     request = youtube.videos().list(part='snippet', id=video_id)
     response = request.execute()
