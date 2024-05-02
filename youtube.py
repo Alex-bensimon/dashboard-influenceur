@@ -4,6 +4,7 @@
 from googleapiclient.discovery import build # type: ignore
 import json
 import os
+from youtube_transcript_api import YouTubeTranscriptApi
 
 #How to Bitcoin channel id: UCjlxqqxeG5HtvKR5zX88Y1w
 
@@ -15,6 +16,39 @@ def file_exist(nom_fichier):
 
 chemin_complet = rf"{channel_id}.json"
 nom_complet=channel_id+".json"
+
+def get_video_transcription(video_id):
+    try:
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        for transcript in transcript_list:
+            # Choisir la transcription française si elle est disponible
+            if transcript.language_code == 'fr':
+                transcription = transcript.fetch()
+                txt=""
+                for i in transcription:
+                    txt+=(i['text'])
+                return txt
+
+        # Si aucune transcription française n'est disponible, choisir l'anglais s'il est disponible
+        for transcript in transcript_list:
+            if transcript.language_code == 'en':
+                transcription = transcript.fetch()
+                txt=""
+                for i in transcription:
+                    txt+=(i['text'])
+                return txt
+
+        # Si aucune des deux langues n'est disponible, choisir la langue disponible
+        transcription = transcript_list[0].fetch()
+        txt=""
+        for i in transcription:
+            txt+=(i['text'])
+        return txt
+
+    except Exception as e:
+        print(f"Erreur lors de la récupération de la transcription pour la vidéo {video_id}: {str(e)}")
+        return None
 
 def get_video_list(channel_id):
     youtube = build('youtube', 'v3', developerKey='...')
@@ -42,6 +76,11 @@ def get_video_list(channel_id):
         video_ids = [item['snippet']['resourceId']['videoId'] for item in response['items']]
         videos_info = youtube.videos().list(part='snippet', id=','.join(video_ids)).execute()
 
+        for video_info in videos_info['items']:
+            video_id = video_info['id']
+            video_transcript = get_video_transcription(video_id)
+            video_info['transcript'] = video_transcript        
+        
         list_videos.extend(videos_info['items'])
 
         if 'nextPageToken' in response:
