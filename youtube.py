@@ -1,21 +1,8 @@
-#vérifie si les données de la chaine demandée ont déjé été ingérées, si non crée le fichier ou le met à jour
-#fait la liste de toutes les vidéos d'une chaine youtube, récupères ses informations et les stocke dans un fichier json
-
-from googleapiclient.discovery import build # type: ignore
 import json
 import os
+from tqdm import tqdm
+from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
-
-#How to Bitcoin channel id: UCjlxqqxeG5HtvKR5zX88Y1w
-
-channel_id=input("Taper l'ID de la chaine youtube : ")
-
-
-def file_exist(nom_fichier):
-    return os.path.isfile(nom_fichier)
-
-chemin_complet = rf"{channel_id}.json"
-nom_complet=channel_id+".json"
 
 def get_video_transcription(video_id):
     try:
@@ -25,34 +12,27 @@ def get_video_transcription(video_id):
             # Choisir la transcription française si elle est disponible
             if transcript.language_code == 'fr':
                 transcription = transcript.fetch()
-                txt=""
-                for i in transcription:
-                    txt+=(i['text'])
+                txt = "".join(i['text'] for i in transcription)
                 return txt
 
-        # Si aucune transcription française n'est disponible, choisir l'anglais s'il est disponible
         for transcript in transcript_list:
+        # Si aucune transcription française n'est disponible, choisir l'anglais s'il est disponible
             if transcript.language_code == 'en':
                 transcription = transcript.fetch()
-                txt=""
-                for i in transcription:
-                    txt+=(i['text'])
+                txt = "".join(i['text'] for i in transcription)
                 return txt
 
         # Si aucune des deux langues n'est disponible, choisir la langue disponible
         transcription = transcript_list[0].fetch()
-        txt=""
-        for i in transcription:
-            txt+=(i['text'])
+        txt = "".join(i['text'] for i in transcription)
         return txt
 
     except Exception as e:
         print(f"Erreur lors de la récupération de la transcription pour la vidéo {video_id}: {str(e)}")
         return None
 
-def get_video_list(channel_id):
+def get_video_list_yt(channel_id):
     youtube = build('youtube', 'v3', developerKey='...')
-
     list_videos = []
 
     request_playlist = youtube.channels().list(
@@ -77,11 +57,7 @@ def get_video_list(channel_id):
         videos_info = youtube.videos().list(part='snippet', id=','.join(video_ids)).execute()
 
         for video_info in videos_info['items']:
-            video_id = video_info['id']
-            video_transcript = get_video_transcription(video_id)
-            video_info['transcript'] = video_transcript        
-        
-        list_videos.extend(videos_info['items'])
+            list_videos.append(video_info)
 
         if 'nextPageToken' in response:
             params['pageToken'] = response['nextPageToken']
@@ -90,23 +66,54 @@ def get_video_list(channel_id):
 
     return list_videos
 
- 
-def export_to_json(data, filename):
+def get_video_list_json(filename):
+    try:
+        with open(filename, 'r') as json_file:
+            existing_data = json.load(json_file)
+            return existing_data
+    except FileNotFoundError:
+        return []
+
+def add_videos_to_json(filename, videos):
     with open(filename, 'w') as json_file:
-        json.dump(data, json_file, indent=4)
+        json.dump(videos, json_file, indent=4)
 
+def update_video_list(channel_id, filename):
+    if file_exist(filename):
+        print(f"Le fichier '{filename}' existe.")
+        maj = input("Voulez-vous le mettre à jour ? [y/n] ")
+        if maj == "y":
+            print(f"Patientez pendant la mise à jour. Cela peut prendre quelques instants.")
+            existing_videos = get_video_list_json(filename)
+            existing_video_ids = {video['id'] for video in existing_videos}
 
-if file_exist(chemin_complet):
-    print(f"Le fichier '{nom_complet}' existe.")
-    maj = input("Voulez vous le mettre à jour ? [y/n] ")
-    if maj == "y":
-        print(f"Patientez pendant la mis à jour. Cela peut prendre quelques instants.")
-        list_videos=get_video_list(channel_id)
-        export_to_json(list_videos, nom_complet)
-        print(f"Le fichier '{nom_complet}' a été mis à jour.")
-    
-else:
-    print(f"Le fichier '{nom_complet}' n'existe pas.\nPatientez pendant sa création. Cela peut prendre quelques instants.")
-    list_videos=get_video_list(channel_id)
-    export_to_json(list_videos, nom_complet)
-    print(f"Le fichier '{nom_complet}' a été créé.")
+            new_videos = get_video_list_yt(channel_id)
+            new_unique_videos = [video for video in new_videos if video['id'] not in existing_video_ids]
+
+            if new_unique_videos:
+                for video_info in tqdm(new_unique_videos, desc="Récupération des transcriptions"):
+                    video_transcript = get_video_transcription(video_info['id'])
+                    video_info['transcript'] = video_transcript
+
+                updated_videos = existing_videos + new_unique_videos
+                add_videos_to_json(filename, updated_videos)
+                print(f"{len(new_unique_videos)} nouvelles vidéos ajoutées au fichier '{filename}'.")
+            else:
+                print("Aucune nouvelle vidéo trouvée.")
+    else:
+        print(f"Le fichier '{filename}' n'existe pas.\nPatientez pendant sa création. Cela peut prendre quelques instants.")
+        list_videos = get_video_list_yt(channel_id)
+        for video_info in tqdm(list_videos, desc="Récupération des transcriptions"):
+            video_transcript = get_video_transcription(video_info['id'])
+            video_info['transcript'] = video_transcript
+        add_videos_to_json(filename, list_videos)
+        print(f"Le fichier '{filename}' a été créé.")
+
+def file_exist(nom_fichier):
+    return os.path.isfile(nom_fichier)
+
+#How to Bitcoin channel id: UCjlxqqxeG5HtvKR5zX88Y1w
+channel_id = input("Taper l'ID de la chaine youtube : ")
+chemin_complet = f"{channel_id}.json"
+
+update_video_list(channel_id, chemin_complet)
