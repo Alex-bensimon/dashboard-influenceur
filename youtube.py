@@ -3,29 +3,36 @@ import os
 from tqdm import tqdm
 from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
+import re
+
+def decode_unicode(text):
+    if text is None:
+        return ""
+    return re.sub(r'\\u([0-9a-fA-F]{4})', lambda x: chr(int(x.group(1), 16)), text)
+
+def group_text(text, group_length=11985):
+    groups = []
+    for i in range(0, len(text), group_length):
+        groups.append(text[i:i+group_length])
+    return groups
 
 def get_video_transcription(video_id):
     try:
         transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
-
+        
         for transcript in transcript_list:
-            # Choisir la transcription française si elle est disponible
-            if transcript.language_code == 'fr':
-                transcription = transcript.fetch()
-                txt = "".join(i['text'] for i in transcription)
-                return txt
+            # Récupérer la première transcription disponible
+            transcription = transcript.fetch()
+            txt = "".join(i['text'] for i in transcription)
+            # Découper la transcription en segments de textes (décodés)
+            if len(txt) > 11985:
+                return group_text(decode_unicode(txt))
+            else:
+                return decode_unicode(txt)
 
-        for transcript in transcript_list:
-        # Si aucune transcription française n'est disponible, choisir l'anglais s'il est disponible
-            if transcript.language_code == 'en':
-                transcription = transcript.fetch()
-                txt = "".join(i['text'] for i in transcription)
-                return txt
-
-        # Si aucune des deux langues n'est disponible, choisir la langue disponible
-        transcription = transcript_list[0].fetch()
-        txt = "".join(i['text'] for i in transcription)
-        return txt
+        # Si aucune transcription n'est disponible
+        print(f"Aucune transcription disponible pour la vidéo {video_id}")
+        return None
 
     except Exception as e:
         print(f"Erreur lors de la récupération de la transcription pour la vidéo {video_id}: {str(e)}")
@@ -68,15 +75,16 @@ def get_video_list_yt(channel_id):
 
 def get_video_list_json(filename):
     try:
-        with open(filename, 'r') as json_file:
+        with open(filename, 'r', encoding='utf-8') as json_file:
             existing_data = json.load(json_file)
             return existing_data
     except FileNotFoundError:
         return []
 
 def add_videos_to_json(filename, videos):
-    with open(filename, 'w') as json_file:
-        json.dump(videos, json_file, indent=4)
+    with open(filename, 'w', encoding='utf-8') as json_file:
+        json.dump(videos, json_file, indent=4, ensure_ascii=False)
+
 
 def update_video_list(channel_id, filename):
     if file_exist(filename):
