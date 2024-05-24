@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application de Traitement de Texte</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            background-color: #1f1f1f;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        #header img {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin-left: 20px;
+        }
+
+        #header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #ff8c00;
+            margin: 0;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        #recherche {
+            margin-top: 50px;
+            text-align: center;
+            width: 100%;
+        }
+
+        #recherche input[type="text"] {
+            width: 60%;
+            max-width: 500px;
+            padding: 15px;
+            border-radius: 25px;
+            border: none;
+            margin-bottom: 20px;
+            font-size: 16px;
+            color: #333;
+            background-color: #f0f0f0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        #recherche input[type="text"]:focus {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #recherche input[type="image"] {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            vertical-align: middle;
+            margin-left: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        #recherche input[type="image"]:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <img src="https://yt3.ggpht.com/YoJLHvm3h2GiJr6-3yNBwYq6J1oVKplMehfrAwgc5t5UgpSCrJ4L9ds1tW8jgIpMevy2fZs8=s176-c-k-c0x00ffffff-no-rj-mo" alt="Image" />
+        <h1>HowToBitcoin</h1>
+    </div>
+    
+    <div id="recherche">
+        <form action="/traitement" method="post">
+            <input type="text" name="phrase" placeholder="Recherche" required>
+            <input type="image" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwyC7Un0dQ_2sC-bswPWkdNIhtveOQU1nvJMF6TPPrTg&s" alt="Loupe">
+        </form>
+    </div>
+</body>
+</html>
