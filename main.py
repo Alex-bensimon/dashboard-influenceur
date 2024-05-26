@@ -9,7 +9,7 @@ def main():
     chemin_complet = f"database/{channel_id}.json"
 
     # Création de l'instance YouTubeProcessor (class dans le fichier youtube.py qui récupère les informations et les trasncriptions)
-    youtube_processor = YouTubeProcessor(api_key='AIzaSyAwB4RS2GZIS8MzGseHtqh8gijdto4sK2g')  # Remplacez 'YOUR_API_KEY' par votre clé API
+    youtube_processor = YouTubeProcessor(api_key='...')  # Remplacez 'YOUR_API_KEY' par votre clé API
     #Lancement de l'instance pour la mise à jour du fichier
     youtube_processor.update_video_list(channel_id, chemin_complet)
 
