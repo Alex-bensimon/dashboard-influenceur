@@ -5,7 +5,7 @@ from googleapiclient.discovery import build
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
 
-class YouTubeProcessor:
+class InfosxTranscripts:
     def __init__(self, api_key):
         self.api_key = api_key
 
